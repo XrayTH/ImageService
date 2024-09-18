@@ -22,6 +22,9 @@
 # Ignorar el contenido de la carpeta uploads
 src/uploads/*
 
+# No ignorar la carpeta uploads en sí
+!src/uploads/.gitkeep
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
