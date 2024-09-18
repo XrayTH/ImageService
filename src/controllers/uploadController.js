@@ -1,10 +1,10 @@
 const path = require('path')
+const fs = require('fs')
 const multer = require('multer')
 
 // Configuración de almacenamiento con multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Utiliza __dirname para obtener la ruta absoluta, subiendo un nivel para salir de la carpeta "controllers"
     cb(null, path.join(__dirname, '..', 'uploads')) // Carpeta donde se guardan las imágenes
   },
   filename: (req, file, cb) => {
@@ -24,5 +24,55 @@ const uploadImage = (req, res) => {
   res.send({ filename: req.file.filename }) // Retorna el nombre del archivo
 }
 
-module.exports = { upload, uploadImage }
+// Controlador para acceder a una imagen por su nombre
+const getImage = (req, res) => {
+  const filename = req.params.filename
+  const filePath = path.join(__dirname, '..', 'uploads', filename)
+
+  // Verificar si el archivo existe
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).send('Imagen no encontrada')
+    }
+    // Enviar el archivo si existe
+    res.sendFile(filePath)
+  })
+}
+
+// Controlador para listar todas las imágenes
+const listImages = (req, res) => {
+  const uploadsDir = path.join(__dirname, '..', 'uploads')
+
+  // Leer el contenido de la carpeta 'uploads'
+  fs.readdir(uploadsDir, (err, files) => {
+    if (err) {
+      return res.status(500).send('Error al leer la carpeta de imágenes')
+    }
+    res.json(files) // Enviar los nombres de los archivos en formato JSON
+  })
+}
+
+// Controlador para eliminar una imagen por nombre
+const deleteImage = (req, res) => {
+  const filename = req.params.filename
+  const filePath = path.join(__dirname, '..', 'uploads', filename)
+
+  // Verificar si el archivo existe
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).send('Imagen no encontrada')
+    }
+
+    // Eliminar el archivo
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        return res.status(500).send('Error al eliminar la imagen')
+      }
+      res.send(`Imagen ${filename} eliminada correctamente`)
+    })
+  })
+}
+
+module.exports = { upload, uploadImage, getImage, listImages, deleteImage }
+
 
